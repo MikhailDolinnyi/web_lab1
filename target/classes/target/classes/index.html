@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>ЛР №1</title>
+  <link rel="stylesheet" href="css/site.css">
+  <script defer src="js/index.js"></script>
+</head>
+<body>
+
+<header>Долинный Михаил Владимирович, P3232, 408549</header>
+
+<table>
+  <tr>
+    <!-- Графика (SVG) в первой ячейке -->
+    <td class="coordinate-plate">
+      <svg width="600" height="600" xmlns="http://www.w3.org/2000/svg">
+        <!-- Ось X -->
+        <line x1="50" y1="300" x2="550" y2="300" stroke="black" stroke-width="2"/>
+        <!-- Ось Y -->
+        <line x1="300" y1="50" x2="300" y2="550" stroke="black" stroke-width="2"/>
+
+        <!-- Стрелки -->
+        <polygon points="550,295 550,305 560,300" fill="black"/>
+        <polygon points="295,50 305,50 300,40" fill="black"/>
+
+        <!-- Прямоугольник во 2 четверти -->
+        <rect x="150" y="150" width="149" height="149" fill="dodgerblue"/>
+        <!-- 1/4 окружности в 3 четверти -->
+        <path d="M 150 301 A 100 150 300 0 0 299 450 L 299 301 Z" fill="dodgerblue"/>
+        <!-- Треугольник в 4 четверти -->
+        <polygon points="301,301 301,450 450,301" fill="dodgerblue"/>
+
+
+        <text x="310" y="50" class="small">Y</text>
+        <text x="550" y="290" class="small">X</text>
+      </svg>
+    </td>
+
+    <!-- Форма в отдельной строке, в одной ячейке -->
+    <td id="input">
+
+      <div id="error" hidden></div>
+      <form action="/" method="POST" id="data-form">
+        <fieldset>
+          <legend> Введите X</legend>
+          <label><input type="radio" name="x" value="-4"> -4</label>
+          <label><input type="radio" name="x" value="-3"> -3</label>
+          <label><input type="radio" name="x" value="-2"> -2</label>
+          <label><input type="radio" name="x" value="-1"> -1</label>
+          <label><input type="radio" name="x" value="0"> 0</label>
+          <label><input type="radio" name="x" value="1"> 1</label>
+          <label><input type="radio" name="x" value="2"> 2</label>
+          <label><input type="radio" name="x" value="3"> 3</label>
+          <label><input type="radio" name="x" value="4"> 4</label>
+        </fieldset>
+
+        <!-- Ввод Y -->
+        <fieldset>
+          <label for="y">Введите Y (от -5 до 5):</label>
+          <input type="text" id="y" name="y" required>
+        </fieldset>
+        <!-- Выбор радиуса -->
+        <fieldset>
+          <label for="r">Выберите радиус R:</label>
+          <select id="r" name="r" required>
+            <option value="1">1</option>
+            <option value="1.5">1.5</option>
+            <option value="2">2</option>
+            <option value="2.5">2.5</option>
+            <option value="3">3</option>
+          </select>
+        </fieldset>
+
+        <!-- Кнопка отправки -->
+        <button type="submit">Проверить</button>
+      </form>
+    </td>
+
+    <td id="result">
+      <table id="result-table">
+        <tr>
+          <th>X</th>
+          <th>Y</th>
+          <th>R</th>
+          <th>Попал?</th>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+
+</body>
+</html>

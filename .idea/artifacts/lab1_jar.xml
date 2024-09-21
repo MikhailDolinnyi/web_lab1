@@ -1,0 +1,14 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="lab1:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/lab1_jar</output-path>
+    <root id="archive" name="lab-1.jar">
+      <element id="directory" name="META-INF">
+        <element id="file-copy" path="$PROJECT_DIR$/META-INF/MANIFEST.MF" />
+        <element id="module-source" name="lab-1" />
+      </element>
+      <element id="module-output" name="lab-1" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/lib/fastcgi-lib.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/lib/json-simple-1.1.1.jar" path-in-jar="/" />
+    </root>
+  </artifact>
+</component>

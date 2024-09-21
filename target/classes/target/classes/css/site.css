@@ -1,0 +1,73 @@
+body {
+  font-family: Calibri, serif;
+  height: 100vh;
+  background: linear-gradient(to bottom, dodgerblue 6%, white 6%);
+
+}
+
+
+header {
+  font-family: serif;
+
+  margin-bottom: 3%; /* Отступ снизу */
+  font-size: 20px; /* Размер шрифта */
+  text-align: center;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.coordinate-plate {
+  width: 40%;
+}
+
+#input{
+  width: 30%;
+}
+
+#input fieldset {
+  margin-bottom: 3%;
+
+}
+
+
+button {
+  background-color: dodgerblue;
+  border-radius: 5px;
+  font-size: 17px;
+}
+
+
+.small {
+  font-size: 17px;
+}
+
+#result {
+  width: 30%;
+  vertical-align: top;
+}
+
+#result table {
+  border: 2px solid black;
+  border-collapse: collapse;
+  width: 100%;
+}
+
+#result th {
+  border: 2px solid black;
+  width: 25%;
+  text-align: center;
+}
+
+#result td {
+  width: 50%;
+  text-align: center;
+}
+
+
+#error{
+  color: red;
+  margin-bottom: 2%;
+}
