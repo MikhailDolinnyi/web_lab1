@@ -33,7 +33,7 @@ const errorDiv = document.getElementById("error");
 
 async function onSubmit(ev) {
     ev.preventDefault();
-    document.getElementById("audio").play();
+
     const formData = new FormData(form);
     const values = {
         x: formData.get('x'),
@@ -74,17 +74,23 @@ async function onSubmit(ev) {
     rowY.textContent = y;
     rowR.textContent = values.r;
 
+
     if (response.ok) {
+
         const result = await response.json();
         rowTime.textContent = result.time;
         rowNow.textContent = result.now;
-        rowResult.style.color = "green";
-        rowResult.textContent = result.result.toString();
-        // localStorage.setItem('x', values.x);
-        // localStorage.setItem('y', y);
-        // localStorage.setItem('x', values.r);
+        const res =rowResult.textContent = result.result.toString();
+        if (res==="true"){
+            rowResult.style.color="green"
+        }else{
+            document.getElementById("true_audio").play();
+            rowResult.style.color="orange"
+        }
+
 
     } else {
+
         const result = await response.json();
         rowResult.style.color = "red";
         rowResult.textContent = "error";
@@ -93,11 +99,72 @@ async function onSubmit(ev) {
     }
 
 
+    saveTableData();
+
 }
 
 
 const form = document.getElementById("data-form");
 form.addEventListener('submit', onSubmit);
+document.addEventListener('DOMContentLoaded', dataLoader);
 
 
-// let recover_x = localStorage.getItem()
+function dataLoader() {
+
+    const tableData = JSON.parse(sessionStorage.getItem('tableData')) || [];
+
+    tableData.forEach(data => {
+        const newRow = table.insertRow(-1);
+        const rowX = newRow.insertCell(0);
+        const rowY = newRow.insertCell(1);
+        const rowR = newRow.insertCell(2);
+        const rowTime = newRow.insertCell(3);
+        const rowNow = newRow.insertCell(4);
+        const rowResult = newRow.insertCell(5);
+
+        rowX.textContent = data.x;
+        rowY.textContent = data.y;
+        rowR.textContent = data.r;
+        rowTime.textContent = data.time;
+        rowNow.textContent = data.now;
+        rowResult.textContent = data.result;
+
+        if (data.result === "true"){
+            rowResult.style.color="green";
+        }else if ( data.result === "false"){
+            rowResult.style.color="orange"
+        } else{
+            rowResult.style.color="red"
+        }
+    });
+
+}
+
+
+function saveTableData() {
+    const rows = Array.from(table.rows).slice(1);
+    const tableData = rows.map(row => {
+        return {
+            x: row.cells[0].textContent,
+            y: row.cells[1].textContent,
+            r: row.cells[2].textContent,
+            time: row.cells[3].textContent,
+            now: row.cells[4].textContent,
+            result: row.cells[5].textContent,
+        };
+
+
+    });
+
+    sessionStorage.setItem('tableData', JSON.stringify(tableData));
+
+}
+
+
+
+document.addEventListener('DOMContentLoaded', () => {
+    document.body.addEventListener('click', () => {
+        document.getElementById("intro_audio").play();
+    }, { once: true });
+});
+
