@@ -1,4 +1,5 @@
 package mikhail;
+
 import com.fastcgi.FCGIInterface;
 
 import java.io.BufferedReader;
@@ -11,104 +12,104 @@ import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 
 public class Main {
-  private static final String HTTP_RESPONSE = """
-    HTTP/1.1 200 OK
-    Content-Type: application/json
-    Content-Length: %d
+    private static final String HTTP_RESPONSE = """
+            HTTP/1.1 200 OK
+            Content-Type: application/json
+            Content-Length: %d
 
-    %s
-    """;
-  private static final String HTTP_ERROR = """
-    HTTP/1.1 400 Bad Request
-    Content-Type: application/json
-    Content-Length: %d
+            %s
+            """;
+    private static final String HTTP_ERROR = """
+            HTTP/1.1 400 Bad Request
+            Content-Type: application/json
+            Content-Length: %d
 
-    %s
-    """;
-  private static final String RESULT_JSON = """
-    {
-        "time": "%s нс",
-        "now": "%s",
-        "result": %b
+            %s
+            """;
+    private static final String RESULT_JSON = """
+            {
+                "time": "%s нс",
+                "now": "%s",
+                "result": %b
+            }
+            """;
+    private static final String ERROR_JSON = """
+            {
+                "now": "%s",
+                "reason": "%s"
+            }
+            """;
+
+    public static void main(String[] args) {
+        var fcgi = new FCGIInterface();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"); // Формат времени
+
+        while (fcgi.FCGIaccept() >= 0) {
+            try {
+                String requestMethod = System.getProperties().getProperty("REQUEST_METHOD");
+                if (!"POST".equals(requestMethod)) {
+                    throw new ValidateException("Поддерживаются только POST запросы");
+                }
+
+                // Получаем заголовок Content-Length
+                String contentLengthHeader = System.getProperties().getProperty("CONTENT_LENGTH");
+                var parse = getJsonParse(contentLengthHeader);
+
+                var startTime = Instant.now();
+                var result = checkDot(parse.getX(), parse.getY(), parse.getR()); // расчет
+                var endTime = Instant.now();
+
+                // Расчет времени работы и форматирование
+                long timeTakenNanos = ChronoUnit.NANOS.between(startTime, endTime);
+                String formattedNow = LocalDateTime.now().format(formatter); // Форматируем текущее время
+
+                // Формируем JSON ответ
+                var json = String.format(RESULT_JSON, timeTakenNanos, formattedNow, result);
+                var response = String.format(HTTP_RESPONSE, json.getBytes(StandardCharsets.UTF_8).length, json);
+                System.out.println(response);
+            } catch (ValidateException | IOException e) {
+                var formattedNow = LocalDateTime.now().format(formatter);
+                var json = String.format(ERROR_JSON, formattedNow, e.getMessage());
+                var response = String.format(HTTP_ERROR, json.getBytes(StandardCharsets.UTF_8).length, json);
+                System.out.println(response);
+            }
+        }
     }
-    """;
-  private static final String ERROR_JSON = """
-    {
-        "now": "%s",
-        "reason": "%s"
-    }
-    """;
 
-  public static void main(String[] args) {
-    var fcgi = new FCGIInterface();
-    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"); // Формат времени
-
-    while (fcgi.FCGIaccept() >= 0) {
-      try {
-        String requestMethod = System.getProperties().getProperty("REQUEST_METHOD");
-        if (!"POST".equals(requestMethod)) {
-          throw new ValidateException("Поддерживаются только POST запросы");
+    private static JSONParse getJsonParse(String contentLengthHeader) throws ValidateException, IOException {
+        if (contentLengthHeader == null) {
+            throw new ValidateException("Отсутствует заголовок Content-Length");
         }
 
-        // Получаем заголовок Content-Length
-        String contentLengthHeader = System.getProperties().getProperty("CONTENT_LENGTH");
-        var parse = getJsonParse(contentLengthHeader);
+        int contentLength = Integer.parseInt(contentLengthHeader);
+        BufferedReader reader = new BufferedReader(new InputStreamReader(System.in, StandardCharsets.UTF_8));
+        char[] bodyChars = new char[contentLength];
+        reader.read(bodyChars, 0, contentLength);
 
-        var startTime = Instant.now();
-        var result = checkDot(parse.getX(), parse.getY(), parse.getR()); // расчет
-        var endTime = Instant.now();
-
-        // Расчет времени работы и форматирование
-        long timeTakenNanos = ChronoUnit.NANOS.between(startTime, endTime);
-        String formattedNow = LocalDateTime.now().format(formatter); // Форматируем текущее время
-
-        // Формируем JSON ответ
-        var json = String.format(RESULT_JSON, timeTakenNanos, formattedNow, result);
-        var response = String.format(HTTP_RESPONSE, json.getBytes(StandardCharsets.UTF_8).length, json);
-        System.out.println(response);
-      } catch (ValidateException | IOException e) {
-        var formattedNow = LocalDateTime.now().format(formatter);
-        var json = String.format(ERROR_JSON, formattedNow, e.getMessage());
-        var response = String.format(HTTP_ERROR, json.getBytes(StandardCharsets.UTF_8).length, json);
-        System.out.println(response);
-      }
-    }
-  }
-
-  private static JSONParse getJsonParse(String contentLengthHeader) throws ValidateException, IOException {
-    if (contentLengthHeader == null) {
-      throw new ValidateException("Отсутствует заголовок Content-Length");
+        String requestBody = new String(bodyChars);
+        return new JSONParse(requestBody);
     }
 
-    int contentLength = Integer.parseInt(contentLengthHeader);
-    BufferedReader reader = new BufferedReader(new InputStreamReader(System.in, StandardCharsets.UTF_8));
-    char[] bodyChars = new char[contentLength];
-    reader.read(bodyChars, 0, contentLength);
+    private static boolean checkDot(float x, float y, float r) {
+        if (x > 0 && y > 0) {
+            return false;
+        }
 
-    String requestBody = new String(bodyChars);
-      return new JSONParse(requestBody);
-  }
+        if (x < 0 && y > 0) {
+            if (x < -r || y > r) {
+                return false;
+            }
+        }
 
-  private static boolean checkDot(float x, float y, float r) {
-    if (x > 0 && y > 0) {
-      return false;
+        if (x < 0 && y < 0) {
+            if ((x * x + y * y) > r * r) {
+                return false;
+            }
+        }
+
+        if (x > 0 && y < 0) {
+            return !(x > r) && !(y < -r);
+        }
+        return true;
     }
-
-    if (x < 0 && y > 0) {
-      if (x < -r || y > r) {
-        return false;
-      }
-    }
-
-    if (x < 0 && y < 0) {
-      if ((x * x + y * y) > r * r) {
-        return false;
-      }
-    }
-
-    if (x > 0 && y < 0) {
-      return !(x > r) && !(y < -r);
-    }
-    return true;
-  }
 }
