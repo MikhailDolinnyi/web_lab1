@@ -53,13 +53,6 @@ async function onSubmit(ev) {
 
 
 
-        const response = await fetch('/fcgi-bin/lab-1.jar', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json;charset=utf-8'
-            },
-            body: JSON.stringify(values)
-        });
 
 
         const newRow = table.insertRow(-1);
@@ -77,6 +70,15 @@ async function onSubmit(ev) {
         rowR.textContent = values.r;
 
     try {
+        const response = await fetch('/fcgi-bin/lab-1.jar', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json;charset=utf-8'
+            },
+            body: JSON.stringify(values)
+        });
+
+
         if (response.ok) {
 
             const result = await response.json();
@@ -102,9 +104,7 @@ async function onSubmit(ev) {
 
 
         saveTableData();
-    } catch (error) {
-        errorDiv.hidden = false;
-        errorDiv.textContent = "Ошибка при соединении с сервером.";
+    } catch (e) {
         rowResult.style.color = "red";
         rowResult.textContent = "connection error";
     }
