@@ -50,24 +50,19 @@ async function onSubmit(ev) {
         return
     }
 
+    const newRow = table.insertRow(-1);
+    const rowX = newRow.insertCell(0);
+    const rowY = newRow.insertCell(1);
+    const rowR = newRow.insertCell(2);
+    const rowTime = newRow.insertCell(3);
+    const rowNow = newRow.insertCell(4);
+    const rowResult = newRow.insertCell(5);
 
+    const y = parseFloat(String(values.y)).toFixed(2);
 
-
-
-
-        const newRow = table.insertRow(-1);
-        const rowX = newRow.insertCell(0);
-        const rowY = newRow.insertCell(1);
-        const rowR = newRow.insertCell(2);
-        const rowTime = newRow.insertCell(3);
-        const rowNow = newRow.insertCell(4);
-        const rowResult = newRow.insertCell(5);
-
-        const y = parseFloat(values.y).toFixed(2);
-
-        rowX.textContent = values.x;
-        rowY.textContent = y;
-        rowR.textContent = values.r;
+    rowX.textContent = String(values.x);
+    rowY.textContent = y;
+    rowR.textContent = String(values.r);
 
     try {
         const response = await fetch('/fcgi-bin/lab-1.jar', {

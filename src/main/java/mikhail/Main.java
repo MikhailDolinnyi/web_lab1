@@ -47,25 +47,15 @@ public class Main {
       try {
         String requestMethod = System.getProperties().getProperty("REQUEST_METHOD");
         if (!"POST".equals(requestMethod)) {
-          throw new ValidationException("Поддерживаются только POST запросы");
+          throw new ValidateException("Поддерживаются только POST запросы");
         }
 
         // Получаем заголовок Content-Length
         String contentLengthHeader = System.getProperties().getProperty("CONTENT_LENGTH");
-        if (contentLengthHeader == null) {
-          throw new ValidationException("Отсутствует заголовок Content-Length");
-        }
-
-        int contentLength = Integer.parseInt(contentLengthHeader);
-        BufferedReader reader = new BufferedReader(new InputStreamReader(System.in, StandardCharsets.UTF_8));
-        char[] bodyChars = new char[contentLength];
-        reader.read(bodyChars, 0, contentLength);
-
-        String requestBody = new String(bodyChars);
-        var params = new Parameters(requestBody);
+        var parse = getJsonParse(contentLengthHeader);
 
         var startTime = Instant.now();
-        var result = calculate(params.getX(), params.getY(), params.getR()); // расчет
+        var result = checkDot(parse.getX(), parse.getY(), parse.getR()); // расчет
         var endTime = Instant.now();
 
         // Расчет времени работы и форматирование
@@ -76,7 +66,7 @@ public class Main {
         var json = String.format(RESULT_JSON, timeTakenNanos, formattedNow, result);
         var response = String.format(HTTP_RESPONSE, json.getBytes(StandardCharsets.UTF_8).length, json);
         System.out.println(response);
-      } catch (ValidationException | IOException e) {
+      } catch (ValidateException | IOException e) {
         var formattedNow = LocalDateTime.now().format(formatter);
         var json = String.format(ERROR_JSON, formattedNow, e.getMessage());
         var response = String.format(HTTP_ERROR, json.getBytes(StandardCharsets.UTF_8).length, json);
@@ -85,7 +75,21 @@ public class Main {
     }
   }
 
-  private static boolean calculate(float x, float y, float r) {
+  private static JSONParse getJsonParse(String contentLengthHeader) throws ValidateException, IOException {
+    if (contentLengthHeader == null) {
+      throw new ValidateException("Отсутствует заголовок Content-Length");
+    }
+
+    int contentLength = Integer.parseInt(contentLengthHeader);
+    BufferedReader reader = new BufferedReader(new InputStreamReader(System.in, StandardCharsets.UTF_8));
+    char[] bodyChars = new char[contentLength];
+    reader.read(bodyChars, 0, contentLength);
+
+    String requestBody = new String(bodyChars);
+      return new JSONParse(requestBody);
+  }
+
+  private static boolean checkDot(float x, float y, float r) {
     if (x > 0 && y > 0) {
       return false;
     }

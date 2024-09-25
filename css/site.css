@@ -75,7 +75,7 @@
   }
 
 
-  button {
+  #submit {
     background-color: white;
     border-radius: 10px;
     border-color: white;
@@ -84,7 +84,7 @@
 
 
 
-  .small {
+  #small {
     font-size: 17px;
   }
 
