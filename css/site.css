@@ -117,8 +117,10 @@
 
 
   #error{
-    color: white;
+    color: black;
+    background-color: white;
     margin-bottom: 2%;
+    border-radius: 5px;
   }
 
 
