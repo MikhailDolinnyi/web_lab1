@@ -1,6 +1,7 @@
 package mikhail;
 
 import com.fastcgi.FCGIInterface;
+import org.json.simple.JSONObject;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -19,8 +20,24 @@ public class Main {
 
             %s
             """;
-    private static final String HTTP_ERROR = """
+
+    private static final String HTTP_FORBIDDEN = """
+            HTTP/1.1 403 Forbidden
+            Content-Type: application/json
+            Content-Length: %d
+
+            %s
+            """;
+    private static final String HTTP_BAD_REQUEST = """
             HTTP/1.1 400 Bad Request
+            Content-Type: application/json
+            Content-Length: %d
+
+            %s
+            """;
+
+    private static final String HTTP_NOT_FOUND = """
+            HTTP/1.1 404 Not Found
             Content-Type: application/json
             Content-Length: %d
 
@@ -46,17 +63,40 @@ public class Main {
 
         while (fcgi.FCGIaccept() >= 0) {
             try {
-                String requestMethod = System.getProperties().getProperty("REQUEST_METHOD");
-                if (!"POST".equals(requestMethod)) {
-                    throw new ValidateException("Поддерживаются только POST запросы");
+                try {
+                    String requestMethod = System.getProperties().getProperty("REQUEST_METHOD");
+                    if (!"POST".equals(requestMethod)) {
+                        throw new ValidateException("Поддерживаются только POST запросы");
+                    }
+
+                }catch (ValidateException e){
+                    String response = responseError(HTTP_FORBIDDEN,e.getMessage(),formatter);
+                    System.out.println(response);
                 }
+
+                try{
+                    String URI = System.getProperties().getProperty("REQUEST_URI");
+                    if(!URI.matches(".*/fcgi-bin/lab-1.jar(/)?")){
+                        throw new ValidateException("Неверный URI");
+                    }
+                }catch (ValidateException e ){
+                    String response = responseError(HTTP_NOT_FOUND,e.getMessage(),formatter);
+                    System.out.println(response);
+                }
+
 
                 // Получаем заголовок Content-Length
                 String contentLengthHeader = System.getProperties().getProperty("CONTENT_LENGTH");
-                var parse = getJsonParse(contentLengthHeader);
+                JSONObject jsonObject = getJsonParse(contentLengthHeader); // преобразование в JSON Object
+
+                Validator validator = new Validator();
+                validator.validate(jsonObject); //  валидация значений
+
+                Dto dto = new Dto(); // Data Transfer Object класс для хранения/передачи значений
+                dto.setAll(jsonObject);
 
                 var startTime = Instant.now();
-                var result = checkDot(parse.getX(), parse.getY(), parse.getR()); // расчет
+                boolean result = checkDot(dto.getX(),dto.getY(),dto.getR()); // расчет
                 var endTime = Instant.now();
 
                 // Расчет времени работы и форматирование
@@ -68,15 +108,21 @@ public class Main {
                 var response = String.format(HTTP_RESPONSE, json.getBytes(StandardCharsets.UTF_8).length, json);
                 System.out.println(response);
             } catch (ValidateException | IOException e) {
-                var formattedNow = LocalDateTime.now().format(formatter);
-                var json = String.format(ERROR_JSON, formattedNow, e.getMessage());
-                var response = String.format(HTTP_ERROR, json.getBytes(StandardCharsets.UTF_8).length, json);
+                String response = responseError(HTTP_BAD_REQUEST, e.getMessage(), formatter);
                 System.out.println(response);
             }
         }
     }
 
-    private static JSONParse getJsonParse(String contentLengthHeader) throws ValidateException, IOException {
+
+
+    private static JSONObject getJsonParse(String contentLengthHeader) throws ValidateException, IOException {
+        JSONParse jsonParse =  new JSONParse();
+        return jsonParse.parse(readSystemIn(contentLengthHeader));
+    }
+
+//  Метод для чтения System.in
+    private static String readSystemIn(String contentLengthHeader) throws ValidateException, IOException {
         if (contentLengthHeader == null) {
             throw new ValidateException("Отсутствует заголовок Content-Length");
         }
@@ -85,12 +131,11 @@ public class Main {
         BufferedReader reader = new BufferedReader(new InputStreamReader(System.in, StandardCharsets.UTF_8));
         char[] bodyChars = new char[contentLength];
         reader.read(bodyChars, 0, contentLength);
+        return new String(bodyChars);
 
-        String requestBody = new String(bodyChars);
-        return new JSONParse(requestBody);
     }
 
-    private static boolean checkDot(float x, float y, float r) {
+    private static boolean checkDot(int x, float y, float r) {
         if (x > 0 && y > 0) {
             return false;
         }
@@ -111,5 +156,13 @@ public class Main {
             return !(x > r) && !(y < -r);
         }
         return true;
+    }
+
+
+    private static String responseError(String http,String error, DateTimeFormatter formatter){
+        var formattedNow = LocalDateTime.now().format(formatter);
+        var json = String.format(ERROR_JSON, formattedNow, error);
+        return String.format(http, json.getBytes(StandardCharsets.UTF_8).length, json);
+
     }
 }

@@ -5,23 +5,66 @@ class InvalidValueException extends Error {
     }
 }
 
+
+const xValidator = new XValidator();
+const yValidator = new YValidator();
+const rValidator = new RValidator();
+
+class Validator {
+    validate(value) {
+        throw new Error("Метод validate() нужно переопределить");
+    }
+}
+
+class XValidator extends Validator {
+    validate(value) {
+        if (value === null || value === undefined) {
+            throw new InvalidValueException("Пожалуйста, выберите X");
+        }
+        return true;
+    }
+}
+
+class YValidator extends Validator {
+    validate(value) {
+        if (isNaN(value)) {
+            throw new InvalidValueException("Неверное значение Y");
+        }
+
+        const yString = String(value).trim();
+        const decimalPart = yString.split('.')[1];
+
+        if (decimalPart && decimalPart.length > 15) {
+            throw new InvalidValueException("Слишком большое количество знаков после запятой");
+        }
+
+        const y = Number(value);
+        if (y < -5 || y > 5) {
+            throw new InvalidValueException("Число Y не входит в диапазон");
+        }
+
+        return true;
+    }
+}
+
+class RValidator extends Validator {
+    validate(value) {
+        if (isNaN(value)) {
+            throw new InvalidValueException("Неверное значение радиуса");
+        }
+        return true;
+    }
+}
+
+
+
+
 function validateFormInput(values) {
-    if (values.x === null) {
-        throw new InvalidValueException("Пожалуйста, выберите X");
-    }
 
-    if (isNaN(values.y)) {
-        throw new InvalidValueException("Неверное значение Y");
-    }
 
-    const y = parseInt(values.y);
-    if (y < -5 || y > 5) {
-        throw new InvalidValueException("Число Y не входит в диапазон")
-    }
-
-    if (isNaN(values.r)) {
-        throw new InvalidValueException("Неверное значение радиуса")
-    }
+        xValidator.validate(values.x);
+        yValidator.validate(values.y);
+        rValidator.validate(values.r);
 }
 
 
@@ -82,8 +125,9 @@ async function onSubmit(ev) {
             const res = rowResult.textContent = result.result.toString();
             if (res === "true") {
                 rowResult.style.color = "green"
-            } else {
                 document.getElementById("true_audio").play();
+            } else {
+                document.getElementById("false_audio").play();
                 rowResult.style.color = "orange"
             }
 
